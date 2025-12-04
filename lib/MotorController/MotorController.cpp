@@ -31,8 +31,8 @@ int MotorController::calculateDutyCycle(int speed)
     if (absSpeed > 100)
         absSpeed = 100;
 
-    // Mapeia 0-100% para 0-255 (8 bits)
-    return map(absSpeed, 0, 100, 0, 255);
+    // Mapeia 0-100% para 0-1023 (10 bits)
+    return map(absSpeed, 0, 100, 0, 1023);
 }
 
 void MotorController::write(int speed)

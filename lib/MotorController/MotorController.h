@@ -15,8 +15,8 @@ private:
     uint8_t _pwmChannel2;
 
     // Configurações do PWM
-    const int _pwmFreq = 30000;   // 30kHz (frequência inaudível para a maioria dos motores)
-    const int _pwmResolution = 8; // Resolução de 8 bits (0-255)
+    const int _pwmFreq = 1000;     // 30kHz (frequência inaudível para a maioria dos motores)
+    const int _pwmResolution = 10; // Resolução de 8 bits (0-255)
 
     /**
      * @brief Converte a porcentagem de velocidade (-100 a 100) para Duty Cycle PWM.
