@@ -32,12 +32,16 @@ int MotorController::calculateDutyCycle(int speed)
         absSpeed = 100;
 
     // Mapeia 0-100% para 0-1023 (10 bits)
+    Serial.print(">dutyCycle%:");
+    Serial.println(absSpeed);
     return map(absSpeed, 0, 100, 0, 1023);
 }
 
 void MotorController::write(int speed)
 {
     int dutyCycle = calculateDutyCycle(speed);
+    Serial.print(">dutyCycle:");
+    Serial.println(dutyCycle);
 
     if (speed > 0)
     {

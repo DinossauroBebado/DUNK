@@ -84,7 +84,8 @@ void loop()
     // Média das velocidades das rodas
     float velLinear = ((EncoderLeft.getVelocityRad() + EncoderRIGHT.getVelocityRad()) / 2.0) * WHEEL_RADIUS;
 
-    x[0] = angulo;     // Phi
+    angulo = angulo - 0.034;
+    x[0] = angulo-0.034;     // Phi
     x[1] = velAngular; // Omega
     x[2] = velLinear;  // v
     x[3] = 0;          // i (Corrente - assumido 0 se não houver sensor)
@@ -102,15 +103,30 @@ void loop()
     motorLeft.write(u);
     motorRight.write(u);
 
-    // Telemetria
-    Serial.print("Ang:");
-    Serial.print(angulo, 3);
-    Serial.print(" VelAng:");
-    Serial.print(velAngular, 3);
-    Serial.print(" VelLin:");
-    Serial.print(velLinear, 3);
-    Serial.print(" PWM_Calc:");
-    Serial.println(u, 2);
+    // // Telemetria
+    // Serial.print("AngDg:");
+    // Serial.print((angulo*180)/3.14, 3);
+    // Serial.print("AngRad:");
+    // Serial.print(angulo, 3);
+    // Serial.print(" VelAng:");
+    // Serial.print(velAngular, 3);
+    // Serial.print(" VelLin:");
+    // Serial.print(velLinear, 3);
+    // Serial.print(" PWM_Calc:");
+    // Serial.println(u, 2);
+    Serial.print(">ang:");
+    Serial.println(angulo);
+    Serial.print(">angDg:");
+    Serial.println((angulo*180)/3.14);
+    Serial.print(">VelAng:");
+    Serial.println(velAngular);
+    Serial.print(">velLinear:");
+    Serial.println(velLinear);
+    Serial.print(">u:");
+    Serial.println(u);
+
+    
+    
 
     // Mantém o loop em ~100Hz (10ms)
     // Usamos while para garantir precisão, delay(10) é impreciso
