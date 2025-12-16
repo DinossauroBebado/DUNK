@@ -3,37 +3,32 @@
 #include "MotorController.h"
 #include "MotorEncoder.h"
 #include "IMUHandler.h"
-// Removemos o include do LQR_Controller.h pois faremos o cálculo manual
-// #include "LQR_Controller.h"
-
 #include "config.h"
+#include "LQRControlTask.h"
+#include "SharedData.h"
 
+// --- Instanciação Global do Hardware ---
 IMUHandler imu;
-
-// ============================================================
-// GANHOS LQR (Calculados Offline no Computador)
-// Para Ts = 0.01s (10ms) e suas matrizes A/B/Q/R
-// ============================================================
-// ATENÇÃO: Seus valores de matriz A são muito altos (1032.5).
-// Isso gerou ganhos altos. Se o robô vibrar muito, reduza esses valores manualmente.
-float K[4] = {197.362, 46.47, -36.66, -36.21};
-
-// Variáveis de Estado
-float x[4] = {0, 0, 0, 0};
-
-// Instanciação do Hardware
 MotorController motorRight(MOTOR_RA1_PIN, MOTOR_RA2_PIN, 0, 1);
 MotorController motorLeft(MOTOR_LA1_PIN, MOTOR_LA2_PIN, 2, 3);
-MotorEncoder EncoderLeft(ENCL_A_PIN, ENCL_B_PIN, PPR, false);
-MotorEncoder EncoderRIGHT(ENCR_A_PIN, ENCR_B_PIN, PPR, false);
+MotorEncoder encoderLeft(ENCL_A_PIN, ENCL_B_PIN, PPR, false);
+MotorEncoder encoderRight(ENCR_A_PIN, ENCR_B_PIN, PPR, false);
 
-void IRAM_ATTR islEncoder() { EncoderLeft.update(); }
-void IRAM_ATTR isrEncoder() { EncoderRIGHT.update(); }
+// --- Gerenciadores ---
+SharedDataManager sharedData;
+LQRControlTask lqrTask(&imu, &motorLeft, &motorRight, &encoderLeft, &encoderRight, &sharedData);
+
+// --- Interrupções (Devem ser globais ou estáticas) ---
+void IRAM_ATTR islEncoder() { encoderLeft.update(); }
+void IRAM_ATTR isrEncoder() { encoderRight.update(); }
 
 void setup()
 {
     Serial.begin(115200);
     Wire.begin();
+
+    // Aumentar clock do I2C ajuda na velocidade de leitura do IMU
+    Wire.setClock(400000);
 
     // Inicialização IMU
     if (!imu.begin())
@@ -44,92 +39,42 @@ void setup()
     }
     Serial.println("IMU OK");
 
-    // Inicialização Motores e Encoders
+    // Inicialização Motores
     motorLeft.begin();
     motorRight.begin();
-    EncoderRIGHT.begin();
-    EncoderLeft.begin();
+    encoderRight.begin();
+    encoderLeft.begin();
 
+    // Attach Interrupts
     attachInterrupt(digitalPinToInterrupt(ENCL_A_PIN), islEncoder, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENCR_A_PIN), isrEncoder, CHANGE);
 
-    Serial.println("Sistema Pronto. Iniciando controle LQR Estático.");
+    Serial.println("Iniciando Task de Controle LQR no Core 0...");
 
-    // Debug dos ganhos carregados
-    Serial.print("Ganhos K: [");
-    Serial.print(K[0]);
-    Serial.print(", ");
-    Serial.print(K[1]);
-    Serial.print(", ");
-    Serial.print(K[2]);
-    Serial.print(", ");
-    Serial.print(K[3]);
-    Serial.println("]");
-
-    motorLeft.write(0);
-    motorRight.write(0);
+    // Inicia a thread de controle separada
+    lqrTask.begin();
 }
 
 void loop()
 {
-    unsigned long startLoop = millis();
+    // --- Loop de Telemetria (Roda no Core 1) ---
+    // Este loop pode demorar o quanto quiser (prints lentos)
+    // que não afetará o equilíbrio do robô.
 
-    // 1. Atualiza Sensores
-    imu.update();
-
-    // 2. Obtém Estados (Convertendo para SI: Radianos e m/s)
-    float angulo = imu.getPitch() * (PI / 180.0);
-    float velAngular = imu.getGyroRate() * (PI / 180.0);
-
-    // Média das velocidades das rodas
-    float velLinear = ((EncoderLeft.getVelocityRad() + EncoderRIGHT.getVelocityRad()) / 2.0) * WHEEL_RADIUS;
-
-    angulo = angulo - 0.034;
-    x[0] = angulo-0.034;     // Phi
-    x[1] = velAngular; // Omega
-    x[2] = velLinear;  // v
-    x[3] = 0;          // i (Corrente - assumido 0 se não houver sensor)
-
-    // 3. Calcula Ação de Controle: u = -K * x
-    // u = - (k1*ang + k2*gyro + k3*vel + k4*curr)
-    float u = -(K[0] * x[0] +
-                K[1] * x[1] +
-                K[2] * x[2] +
-                K[3] * x[3]);
-
-    // 4. Aplica aos motores
-    // Nota: O valor de 'u' calculado pelo seu modelo (ganho 1973) será MUITO ALTO (ex: 200V).
-    // A função motor.write deve limitar isso (clamp) entre -100 e 100 ou -255 e 255.
-    motorLeft.write(u);
-    motorRight.write(u);
-
-    // // Telemetria
-    // Serial.print("AngDg:");
-    // Serial.print((angulo*180)/3.14, 3);
-    // Serial.print("AngRad:");
-    // Serial.print(angulo, 3);
-    // Serial.print(" VelAng:");
-    // Serial.print(velAngular, 3);
-    // Serial.print(" VelLin:");
-    // Serial.print(velLinear, 3);
-    // Serial.print(" PWM_Calc:");
-    // Serial.println(u, 2);
+    // Recupera dados seguros do controlador
+    RobotState currentData = sharedData.getState();
+    // Use o Teleplot ou Serial Plotter
     Serial.print(">ang:");
-    Serial.println(angulo);
-    Serial.print(">angDg:");
-    Serial.println((angulo*180)/3.14);
+    Serial.println(currentData.angle);
     Serial.print(">VelAng:");
-    Serial.println(velAngular);
+    Serial.println(currentData.angularVelocity);
     Serial.print(">velLinear:");
-    Serial.println(velLinear);
+    Serial.println(currentData.linearVelocity);
     Serial.print(">u:");
-    Serial.println(u);
+    Serial.println(currentData.controlOutput);
+    Serial.print(">Hz:");
+    Serial.println(currentData.loopRate);
 
-    
-    
-
-    // Mantém o loop em ~100Hz (10ms)
-    // Usamos while para garantir precisão, delay(10) é impreciso
-    while (millis() - startLoop < 10)
-        ;
+    // Frequência de atualização da tela/serial (ex: 20Hz é suficiente para olho humano)
+    delay(50);
 }
