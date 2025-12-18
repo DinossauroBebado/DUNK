@@ -18,7 +18,7 @@ private:
     MotorEncoder *_encRight;
     SharedDataManager *_sharedData;
 
-    float K[4] = {197.362, 46.47, -36.66, -36.21};
+    float K[4] = {35.0, -630, 180.98, 0};
     float x[4] = {0, 0, 0, 0};
 
     TaskHandle_t _taskHandle;
