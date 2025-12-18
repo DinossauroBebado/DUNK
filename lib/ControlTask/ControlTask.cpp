@@ -1,22 +1,22 @@
 #include "ControlTask.h"
 
 #define WHEEL_RADIUS 0.035
-LQRControlTask::LQRControlTask(IMUHandler *imu, MotorController *mL, MotorController *mR,
-                               MotorEncoder *eL, MotorEncoder *eR, SharedDataManager *shared)
+ControlControlTask::ControlControlTask(IMUHandler *imu, MotorController *mL, MotorController *mR,
+                                       MotorEncoder *eL, MotorEncoder *eR, SharedDataManager *shared)
     : _imu(imu), _motorLeft(mL), _motorRight(mR), _encLeft(eL), _encRight(eR), _sharedData(shared) {}
 
-void LQRControlTask::begin()
+void ControlControlTask::begin()
 {
-    xTaskCreatePinnedToCore(taskEntry, "LQR_Loop", 4096, this, 5, &_taskHandle, 0);
+    xTaskCreatePinnedToCore(taskEntry, "Control_Loop", 4096, this, 5, &_taskHandle, 0);
 }
 
-void LQRControlTask::taskEntry(void *pvParameters)
+void ControlControlTask::taskEntry(void *pvParameters)
 {
-    LQRControlTask *instance = (LQRControlTask *)pvParameters;
+    ControlControlTask *instance = (ControlControlTask *)pvParameters;
     instance->controlLoop();
 }
 
-void LQRControlTask::controlLoop()
+void ControlControlTask::controlLoop()
 {
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = pdMS_TO_TICKS(1000 / _targetFreq);

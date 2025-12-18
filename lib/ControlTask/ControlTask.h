@@ -1,5 +1,5 @@
-#ifndef LQR_CONTROL_TASK_H
-#define LQR_CONTROL_TASK_H
+#ifndef Control_CONTROL_TASK_H
+#define Control_CONTROL_TASK_H
 
 #include <Arduino.h>
 #include "MotorController.h"
@@ -8,7 +8,7 @@
 #include "config.h"
 #include "SharedData.h"
 
-class LQRControlTask
+class ControlControlTask
 {
 private:
     IMUHandler *_imu;
@@ -31,10 +31,10 @@ private:
     void controlLoop();
 
 public:
-    LQRControlTask(IMUHandler *imu,
-                   MotorController *mL, MotorController *mR,
-                   MotorEncoder *eL, MotorEncoder *eR,
-                   SharedDataManager *shared);
+    ControlControlTask(IMUHandler *imu,
+                       MotorController *mL, MotorController *mR,
+                       MotorEncoder *eL, MotorEncoder *eR,
+                       SharedDataManager *shared);
 
     void begin();
 };

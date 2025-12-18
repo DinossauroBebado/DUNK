@@ -1,8 +1,8 @@
 // ============================================================
-// EXEMPLO DE USO DA BIBLIOTECA LQR CONTROLLER
+// EXEMPLO DE USO DA BIBLIOTECA Control CONTROLLER
 // ============================================================
 
-#include "LQR_Controller.h"
+#include "Control_Controller.h"
 
 // Matrizes do sistema (exemplo do robô de autoequilíbrio)
 const float A[4][4] = {
@@ -17,8 +17,8 @@ const float B[4] = {0, 1, 0, 0};
 float Q[4][4] = {0};
 float R = 1.0;
 
-// Controlador LQR
-LQRController lqr;
+// Controlador Control
+ControlController Control;
 
 // Estados do sistema
 float x[4] = {0.1, 0, 0, 0}; // [phi, omega, v, i]
@@ -57,11 +57,11 @@ void setup()
     }
 
     // ============================================================
-    // 2. CONFIGURAÇÃO DO LQR
+    // 2. CONFIGURAÇÃO DO Control
     // ============================================================
 
     // Configurar pesos (Q e R mantêm-se os mesmos ou ajustam-se para discreto)
-    // Nota: Em LQR discreto, Q as vezes é ajustado como Q*Ts, mas para testes pode manter.
+    // Nota: Em Control discreto, Q as vezes é ajustado como Q*Ts, mas para testes pode manter.
     float Q[4][4] = {
         {120, 0, 0, 0}, // Penalidade Angulo
         {0, 10, 0, 0},  // Penalidade Giroscópio
@@ -70,13 +70,13 @@ void setup()
     };
 
     // Passar as matrizes DISCRETAS para o solver
-    lqr.setSystemMatrices(Ad, Bd);
-    lqr.setWeightMatrices(Q, R);
-    lqr.setAlgorithmParameters(1e-6, 1000);
+    Control.setSystemMatrices(Ad, Bd);
+    Control.setWeightMatrices(Q, R);
+    Control.setAlgorithmParameters(1e-6, 1000);
 
-    Serial.println("Calculando ganhos LQR (Sistema Discreto)...");
+    Serial.println("Calculando ganhos Control (Sistema Discreto)...");
     unsigned long start = micros();
-    lqr.computeGains();
+    Control.computeGains();
     unsigned long end = micros();
 
     Serial.print("Tempo de cálculo: ");
@@ -84,11 +84,11 @@ void setup()
     Serial.println(" μs");
 
     // Mostrar resultados
-    lqr.printSystemInfo(); // Vai mostrar Ad e Bd
-    lqr.printGains();      // K deve ser numérico agora
+    Control.printSystemInfo(); // Vai mostrar Ad e Bd
+    Control.printGains();      // K deve ser numérico agora
 
     // Teste
-    float u = lqr.computeControl(x);
+    float u = Control.computeControl(x);
     if (isnan(u))
     {
         Serial.println("ERRO: O resultado ainda é NaN. Verifique se o sistema é controlável.");
@@ -108,7 +108,7 @@ void loop()
     {
         x[0] = -x[0]; // Alternar ângulo
 
-        float u = lqr.computeControl(x);
+        float u = Control.computeControl(x);
 
         Serial.print("Ângulo: ");
         Serial.print(x[0], 3);

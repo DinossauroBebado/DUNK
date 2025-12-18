@@ -49,7 +49,7 @@ void setup()
     attachInterrupt(digitalPinToInterrupt(ENCL_A_PIN), islEncoder, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENCR_A_PIN), isrEncoder, CHANGE);
 
-    Serial.println("Iniciando Task de Controle LQR no Core 0...");
+    Serial.println("Iniciando Task de Controle Control no Core 0...");
 
     // Inicia a thread de controle separada
     Task.begin();
