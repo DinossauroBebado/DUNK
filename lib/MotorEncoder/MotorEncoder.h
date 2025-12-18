@@ -48,7 +48,7 @@ private:
     float _currentRPM;
 
     // Intervalo mínimo para recálculo de velocidade (evita ruído)
-    const unsigned long _sampleTimeMicros = 20000; // 20ms
+    const unsigned long _sampleTimeMicros = 10000; // 20ms
 };
 
 #endif
