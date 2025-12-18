@@ -16,7 +16,7 @@ MotorEncoder encoderRight(ENCR_A_PIN, ENCR_B_PIN, PPR, false);
 
 // --- Gerenciadores ---
 SharedDataManager sharedData;
-LQRControlTask Task(&imu, &motorLeft, &motorRight, &encoderLeft, &encoderRight, &sharedData);
+ControlTask Task(&imu, &motorLeft, &motorRight, &encoderLeft, &encoderRight, &sharedData);
 
 // --- Interrupções (Devem ser globais ou estáticas) ---
 void IRAM_ATTR islEncoder() { encoderLeft.update(); }
@@ -58,9 +58,7 @@ void setup()
 void loop()
 {
     // --- Loop de Telemetria (Roda no Core 1) ---
-    // Este loop pode demorar o quanto quiser (prints lentos)
     // que não afetará o equilíbrio do robô.
-
     // Recupera dados seguros do controlador
     RobotState currentData = sharedData.getState();
     // Use o Teleplot ou Serial Plotter
