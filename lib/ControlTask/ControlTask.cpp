@@ -1,4 +1,4 @@
-#include "LQRControlTask.h"
+#include "ControlTask.h"
 
 #define WHEEL_RADIUS 0.035
 LQRControlTask::LQRControlTask(IMUHandler *imu, MotorController *mL, MotorController *mR,

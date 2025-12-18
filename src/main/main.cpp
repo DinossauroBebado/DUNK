@@ -4,7 +4,7 @@
 #include "MotorEncoder.h"
 #include "IMUHandler.h"
 #include "config.h"
-#include "LQRControlTask.h"
+#include "ControlTask.h"
 #include "SharedData.h"
 
 // --- Instanciação Global do Hardware ---
@@ -16,7 +16,7 @@ MotorEncoder encoderRight(ENCR_A_PIN, ENCR_B_PIN, PPR, false);
 
 // --- Gerenciadores ---
 SharedDataManager sharedData;
-LQRControlTask lqrTask(&imu, &motorLeft, &motorRight, &encoderLeft, &encoderRight, &sharedData);
+LQRControlTask Task(&imu, &motorLeft, &motorRight, &encoderLeft, &encoderRight, &sharedData);
 
 // --- Interrupções (Devem ser globais ou estáticas) ---
 void IRAM_ATTR islEncoder() { encoderLeft.update(); }
@@ -52,7 +52,7 @@ void setup()
     Serial.println("Iniciando Task de Controle LQR no Core 0...");
 
     // Inicia a thread de controle separada
-    lqrTask.begin();
+    Task.begin();
 }
 
 void loop()
